@@ -2,20 +2,48 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\Genus;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 class GenusController extends Controller
 {
+
     /**
-     * @Route("/genus/{genusName}")
+    * @Route("/genus/new", name="")
+    */
+    public function newAction()
+    {
+        $genus = new Genus();
+        $genus->setName('Octopus'.rand(1, 100));
+        $genus->setSubFamily('Octopodinae');
+        $genus->setSpeciesCount(rand(100, 99999));
+
+        $em = $this->getDoctrine()->getManager();
+        $em->persist($genus);
+        $em->flush();
+
+        return new Response('<html><body>Genus Created!</body></html>');
+    }
+
+    /**
+     * @Route("/genus/{genusName}", name="genus_show")
      */
     public function showAction($genusName)
     {
 
-        $funFact = 'Octopuses can change the color of their body in just *three-tenths* of a second!';
+        $em = $this->getDoctrine()->getManager();
+        
+        $genus = $em->getRepository('AppBundle:Genus')->findOneBy(['name' => $genusName]);
+
+        if (!$genus) {
+            throw $this->createNotFoundException('genus not found');
+        }
+
+        /*$funFact = 'Octopuses can change the color of their body in just *three-tenths* of a second!';
 
         $cache = $this->get('doctrine_cache.providers.my_markdown_cache');
 
@@ -28,11 +56,10 @@ class GenusController extends Controller
             $funFact = $this->get('markdown.parser')
                 ->transform($funFact);
             $cache->save($key, $funFact);
-        }
+        }*/
 
         return $this->render('genus/show.html.twig', array(
-            'name' => $genusName,
-            'funFact' => $funFact,
+            'genus' => $genus,
         ));
     }
 
@@ -53,6 +80,20 @@ class GenusController extends Controller
         ];
 
         return new JsonResponse($data);
+    }
+
+    /**
+    * @Route("/genus", name="")
+    */
+    public function listAction()
+    {
+        $em = $this->getDoctrine()->getManager();
+
+        $genuses = $em->getRepository('AppBundle:Genus')->findAll();
+
+        return $this->render('genus/list.html.twig', [
+            'genuses' => $genuses
+        ]);
     }
 }
     
