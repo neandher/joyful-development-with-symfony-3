@@ -41,7 +41,7 @@ class GenusNote
     /**
      * You can also use the full namespace: AppBundle\Entity\Genus - and that's required if the two entities do not live in the same namespace/directory.
      *
-     * @ORM\ManyToOne(targetEntity="Genus")
+     * @ORM\ManyToOne(targetEntity="Genus", inversedBy="notes")
      * @ORM\JoinColumn(nullable=false)
      */
     private $genus;
