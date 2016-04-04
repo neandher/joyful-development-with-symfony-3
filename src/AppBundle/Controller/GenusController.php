@@ -67,8 +67,17 @@ class GenusController extends Controller
             $cache->save($key, $funFact);
         }*/
 
+        /*$recentNotes = $genus->getNotes()
+            ->filter(function(GenusNote $note) {
+                return $note->getCreatedAt() > new \DateTime('-3 months');
+            });*/
+
+        $recentNotes = $em->getRepository('AppBundle:GenusNote')
+            ->findAllRecentNotesForGenus($genus);
+
         return $this->render('genus/show.html.twig', array(
             'genus' => $genus,
+            'recentNoteCount' => count($recentNotes)
         ));
     }
 
@@ -79,17 +88,19 @@ class GenusController extends Controller
     public function getNotesAction(Genus $genus)
     {
 
+        $notes = [];
+
         foreach ($genus->getNotes() as $note) {
-            dump($note);
+            $notes[] = [
+                'id' => $note->getId(),
+                'username' => $note->getUsername(),
+                'avatarUri' => '/images/'.$note->getUserAvatarFilename(),
+                'note' => $note->getNote(),
+                'date' => $note->getCreatedAt()->format('M d, Y')
+            ];
         }
-
-        $notes = [
-            ['id' => 1, 'username' => 'AquaPelham', 'avatarUri' => '/images/leanna.jpeg', 'note' => 'Octopus asked me a riddle, outsmarted me', 'date' => 'Dec. 10, 2015'],
-            ['id' => 2, 'username' => 'AquaWeaver', 'avatarUri' => '/images/ryan.jpeg', 'note' => 'I counted 8 legs... as they wrapped around me', 'date' => 'Dec. 1, 2015'],
-            ['id' => 3, 'username' => 'AquaPelham', 'avatarUri' => '/images/leanna.jpeg', 'note' => 'Inked!', 'date' => 'Aug. 20, 2015'],
-        ];
-
-        $data = [
+        $data =
+            [
             'notes' => $notes
         ];
 
@@ -104,7 +115,7 @@ class GenusController extends Controller
         $em = $this->getDoctrine()->getManager();
 
         $genuses = $em->getRepository('AppBundle:Genus')
-            ->findAllPublishedOrderedBySize();
+            ->findAllPublishedOrderedByRecentlyActive();
 
         return $this->render('genus/list.html.twig', [
             'genuses' => $genuses
